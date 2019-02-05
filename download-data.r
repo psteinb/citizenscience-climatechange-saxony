@@ -6,24 +6,37 @@ library(readr)
 library(ggplot2)
 library(dplyr)
 
-stations = read_csv("station_ids", col_names=FALSE)
-
-
+stations = read_csv("stations-saxony.csv", col_names=c('station_id','date_start','date_end','geo_lon','geo_lat','height','name','state'))
 
 download_station = function(sid){
 
-		 cat("downloading",sid,"/",nrow(stations),"\n")
+		 sid_mask = stations$station_id %in% sid
+
+		 
 		 station_link = selectDWD(id=sid, res='monthly', var='kl', per='historical')
-		 station_data = tryCatch({dataDWD(station_link)},
-					 warning = function(w){ print(paste("warning emitted on station ",sid,w)) },
-					 error = function(e){ print(paste("failed to download station ",sid,e)); return(NA) },
-					 finally = { print(paste("download station ",sid,'successfull'))  })
-		 return(station_data)
+		 
+		 station_data = tryCatch({dataDWD(station_link, progbar=T,read=T)},
+                                         warning = function(w){ cat(paste('something fishy with',sid,stations$name[sid_mask])); },
+					 error = function(e){ print(paste('unable to download',sid,stations$name[sid_mask]));return(NA) },
+					 finally = { cat(sid) })
+
+		 if(is.null(station_data) || is.na(station_data) == T){
+                        cat('failed')
+		 	return(station_data)
+		 }
+                 
+		 rdf = station_data %>% select(STATIONS_ID,MESS_DATUM_BEGINN,MESS_DATUM_ENDE,QN_4,MO_TT,MO_TX,MO_TN)
+		 rdf$longitude = stations$geo_lon[sid_mask]
+		 rdf$latitude = stations$geo_lat[sid_mask]
+		 rdf$name = stations$name[sid_mask]
+
+		 cat("obtained","\t",stations$geo_lon[sid_mask],stations$geo_lat[sid_mask],stations$name[sid_mask],'\n')
+		 
+		 return(rdf)
 }
 
 
-data = sapply(stations$X1,download_station)
+dflist = sapply(stations$station_id,download_station)
+df = bind_rows(dflist)
 
-
-
-head(df)
+write_csv(df,'saxony-climate.csv')
