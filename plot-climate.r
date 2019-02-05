@@ -18,5 +18,5 @@ plot = ggplot(temp_median_year,aes(latitude,longitude,color=MO_TT)) + geom_point
   transition_time(yr) +
   ease_aes('linear')
 
-ggsave("feb.png",plot)
+animate(plot, renderer = file_renderer())#creates tons of files
 
