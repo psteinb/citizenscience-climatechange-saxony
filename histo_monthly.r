@@ -8,24 +8,26 @@ library(gganimate)
 
 temps = read_csv("saxony-monthly-temperature.csv")
 
+glimpse(temps)
 
 temp_median_year = temps %>%
     mutate(yr= as.integer(year(ymd(MESS_DATUM_BEGINN))), mo= month(ymd(MESS_DATUM_BEGINN))) %>%
     #filter(mo == 2)%>%
     group_by(yr,STATIONS_ID)
 
-# https://github.com/thomasp85/gganimate
+glimpse(temp_median_year)
+
 anplot = ggplot(temp_median_year,aes(MO_TT)) +
     geom_histogram() +
     facet_wrap(~ mo) + 
     theme_minimal() +
-    xlab("Temperatur") +
-    labs(title = 'Year: {frame_time}', x = 'Temperatur', y = 'N') +
-    transition_time(yr) +
-    ease_aes('linear') 
+    xlab("Temperatur")
+  
+ggsave("histo_monthly.png",anplot)
 
-anim = animate(anplot,
-               #nframes=15,
-               renderer = gifski_renderer(), width=500,height=350)
-#magick::image_write(anim, path="monthly-temperatures.gif")
-anim_save("histo_monthly.gif",anim)
+hplot = ggplot(temp_median_year,aes(height)) +
+    geom_histogram() +
+    theme_minimal() +
+    xlab("Hoehe")
+  
+ggsave("histo_heights.png",hplot)
