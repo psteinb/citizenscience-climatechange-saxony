@@ -56,7 +56,7 @@ temps_station = temps %>%
 
 # https://github.com/thomasp85/gganimate
 anplot = ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median)) +
-    geom_point(size=8) +
+    geom_point(size=20) +
     geom_jitter() +
     theme_minimal() +
     scale_color_gradient2(midpoint=0, low="blue", mid="white",
@@ -78,7 +78,7 @@ anim = animate(anplot,
 anim_save("monthly-temperatures.gif",anim)
 
 anplot = ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=max_anom_median)) +
-    geom_point(size=8) +
+    geom_point(size=20) +
     geom_jitter() +
     theme_minimal() +
                                         #scale_color_gradientn(colors=rev(rainbow(5))) +
