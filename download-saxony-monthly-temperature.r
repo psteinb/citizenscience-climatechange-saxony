@@ -6,7 +6,8 @@ library(readr)
 library(ggplot2)
 library(dplyr)
 
-stations = read_csv("stations-saxony.csv", col_names=c('station_id','date_start','date_end','geo_lon','geo_lat','height','name','state'))
+stations = read_csv("stations-saxony.csv",
+                    col_names=c('station_id','date_start','date_end','geo_lon','geo_lat','height','name','state'))
 
 download_station = function(sid){
 
@@ -31,7 +32,7 @@ download_station = function(sid){
         select(STATIONS_ID,MESS_DATUM_BEGINN,MESS_DATUM_ENDE,QN_4,MO_TT,MO_TX,MO_TN) %>%
         left_join(station_info, by = c("STATIONS_ID"="station_id"))
     
-    cat("obtained","\t",stations$geo_lon[sid_mask],stations$geo_lat[sid_mask],stations$name[sid_mask],'\n')
+    cat(" obtained","\t",stations$geo_lon[sid_mask],stations$geo_lat[sid_mask],stations$name[sid_mask],'\n')
     
     return(rdf)
 }
