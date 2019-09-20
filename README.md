@@ -1,6 +1,5 @@
 # Visualizing the climate change in Saxony (Germany)
 
-
 ## Goal
 
 Prepare an annual temperature variation as shown in 
@@ -12,31 +11,27 @@ Ultimately, I'd love to create a hexmap of Saxony like [so](https://gist.github.
 
 ## Data aggregation
 
-- data obtained from [DWD CDC](ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/) server
+- data obtained from [DWD CDC](ftp://ftp-cdc.dwd.de/climate_environment/CDC/observations_germany/climate/monthly/kl/historical) server
 
-    + contains 2 folders __historical__ (01.01.1781 - 31.12.2017) or __recent__
-	
-- python module [dwdweather](https://github.com/marians/dwd-weather) 
-  
-    + no historical data?
-    + command line app to explore station IDs
-	+ submitted this [PR](https://github.com/marians/dwd-weather/compare/master...psteinb:py3-fixes?expand=1)
-	    - used this to rextract stations in Saxony:
-		```
-		python3 ./dwdweather.py stations -t csv -r ',Sachsen[^-]'|cut -d, -f1 > ~/development/climatechange-saxony/station_ids
-		```
+    + contains 2 folders __historical__ (01.01.1781 - 31.12.2018) or __recent__
 	
 - R package [rdwd](https://cran.r-project.org/web/packages/rdwd/vignettes/rdwd.html)
-	+ it's hard to find stations inside a state, used python package for this
+	+ it's hard to find stations inside a state, used DWD's [KL_Monatswerte_Beschreibung_Stationen.txt](ftp://ftp-cdc.dwd.de/climate_environment/CDC/observations_germany/climate/monthly/kl/historical/KL_Monatswerte_Beschreibung_Stationen.txt) directly for that and `grep`ed for ` Sachsen `
+    
+## How to use?
 
-## Data Viz
+I have a decent list of dependencies and the code was only used on Fedora 30 (Linux) so far. I use R for vizualisation. Install the dependencies like so:
 
-### in R
+``` R
+install.packages(c("dplyr","gganimate","ggmap","ggplot2","lubridate","rdwd","readr","sf"))
+```
+To create the animated gif, do:
 
-- http://www.milanor.net/blog/maps-in-r-choropleth-maps/
-- http://eriqande.github.io/rep-res-web/lectures/making-maps-with-R.html
-- https://rud.is/b/2015/05/14/geojson-hexagonal-statebins-in-r/
+``` shell
+$ make prepare #downloads the list of weather stations
+$ make animate #performs the 
+```
 
-- (admin state boundaries) https://ec.europa.eu/eurostat/web/gisco/geodata/reference-data/administrative-units-statistical-units/countries#countries16
+## Want to help?
 
-
+Please, open an issue or send a PR.

@@ -6,7 +6,7 @@
 all: prepare
 
 show_packages:
-	grep -h library *r|sort -u|sed -e 's/library(//' -e 's/)//'|tr '\n' ','
+	@grep -h library *r|sort -u|sed -e 's/library(//' -e 's/)//'|tr '\n' ','; echo
 
 station_ids : stations.csv
 	@cut -f1 -d, $< > $@
@@ -24,3 +24,6 @@ saxony-monthly-temperature.csv : stations.csv
 	@Rscript download-saxony-monthly-temperature.r $<
 
 prepare : saxony-monthly-temperature.csv
+
+animate: saxony-monthly-temperature.csv
+	@Rscript animate-monthly-temperatures.r
