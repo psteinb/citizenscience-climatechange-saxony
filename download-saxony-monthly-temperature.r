@@ -27,8 +27,9 @@ dflist = lapply(available_stations$station_id,
 
 message('merging downloaded datasets')
 
-df = bind_rows(dflist)
+df = bind_rows(dflist) %>%
+  left_join(available_stations, by = c("STATIONS_ID"="station_id"))
 
 ofile = 'saxony-monthly-temperature.csv'
 write_csv(df,ofile)
-message('data written to',ofile)
+message('data written to ',ofile)
