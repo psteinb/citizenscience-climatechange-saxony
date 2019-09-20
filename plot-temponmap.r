@@ -27,7 +27,7 @@ common = intersect(stats51$STATIONS_ID,stats17$STATIONS_ID)
 cat(paste(common))
 
 stations = temps %>%
-    select(STATIONS_ID, geo_lat, geo_lon, height)%>%
+    select(STATIONS_ID, geo_lat, geo_lon, height, name)%>%
     unique()
 
 #compute median of reference years 1951 to 1981
@@ -64,12 +64,15 @@ bld = st_read('shapes/vg2500_bld.shx')
 sachsen.df = as.data.frame(bld) %>% filter(GEN == 'Sachsen')
 sachsen.st = st_as_sf(sachsen.df)
 
-#http://strimas.com/r/tidy-sf/
-anplot = #ggmap(DEU)
+## help(st_read)
+sac <- sf::st_read("shapes/vg2500_bld.shp", quiet = TRUE)  %>% filter(GEN %in% "Sachsen")
+## ggsave("sachsen.png",ggplot(sac ) + geom_sf())
 
-    ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median)) + #ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median)) +
-    geom_map(map = sachsen.st) +
-    geom_point()  + 
+#http://strimas.com/r/tidy-sf/
+anplot = ggplot(sac) + #ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median)) +
+    geom_sf() +
+  geom_point(data=temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median))  +
+  geom_sf_label(data=temps_station,aes(label = name)) +
 #    theme_minimal() +
     scale_color_gradient2(midpoint=0, low="blue", mid="white",
                            high="red", space ="Lab" ) +

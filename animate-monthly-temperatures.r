@@ -35,7 +35,7 @@ ref_median_year = temps %>%
            mo= as.integer(month(ymd(MESS_DATUM_BEGINN)))) %>%
     filter(yr > 1950 & yr < 1982, ! is.na(MO_TT), STATIONS_ID %in% common) %>% 
     group_by(STATIONS_ID, mo) %>% 
-    summarize( refmedian = median(MO_TT), refmax = median(MO_TX))
+  summarize( refmedian = median(MO_TT), refmax = median(MO_TX), refmin = median(MO_TN))
     
 
                                         #TODO: add german map
@@ -44,20 +44,28 @@ temps_station = temps %>%
     mutate(yr= as.integer(year(ymd(MESS_DATUM_BEGINN))), mo= month(ymd(MESS_DATUM_BEGINN))) %>%
     filter(yr > 1945, ! is.na(MO_TT) , STATIONS_ID %in% common) %>% 
     left_join(ref_median_year, by=c('STATIONS_ID' = 'STATIONS_ID', 'mo' = 'mo')) %>%
-    mutate( anom = MO_TT - refmedian, max_anom = MO_TX - refmax ) %>%
+  mutate( anom = MO_TT - refmedian,
+         max_anom = MO_TX - refmax ,
+         min_anom = MO_TN - refmin ) %>%
     group_by(STATIONS_ID,yr) %>%
     summarize( anom_total     = round(sum(anom),0),
-               max_anom_total = round(sum(max_anom),0),
+              max_anom_total = round(sum(max_anom),0),
+              min_anom_total = round(sum(min_anom),0),
                anom_median    = round(median(anom),0),
-               max_anom_median= round(median(max_anom),0)
+              max_anom_median= round(median(max_anom),0),
+              min_anom_median= round(median(min_anom),0)
               ) %>%
     left_join(stations, by=c('STATIONS_ID' = 'STATIONS_ID'))
     
+nyears = length(unique(temps_station$yr))
+sac <- sf::st_read("shapes/vg2500_bld.shp", quiet = TRUE)  %>% filter(GEN %in% "Sachsen")
 
 # https://github.com/thomasp85/gganimate
-anplot = ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median)) +
-    geom_point(size=20) +
-    geom_jitter() +
+anplot = ggplot(sac) +
+  geom_sf() +
+  geom_point(data=temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median),
+             size=20) +
+    ## geom_jitter() +
     theme_minimal() +
     scale_color_gradient2(midpoint=0, low="blue", mid="white",
                            high="red", space ="Lab" ) +
@@ -70,8 +78,8 @@ anplot = ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median)) +
     ease_aes('linear') 
 
 anim = animate(anplot,
-                                        #nframes=15,
-               fps=2,
+               nframes=nyears,
+               duration=20,
                renderer = gifski_renderer(),
                width=700,height=500)
 
@@ -93,8 +101,8 @@ anplot = ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=max_anom_median)) +
     ease_aes('linear') 
 
 anim = animate(anplot,
-                                        #nframes=15,
-               fps=2,
+               nframes=nyears,
+               duration=20,
                renderer = gifski_renderer(),
                width=700,height=500)
 #magick::image_write(anim, path="monthly-temperatures.gif")
