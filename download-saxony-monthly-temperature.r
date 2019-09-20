@@ -1,44 +1,33 @@
 # script can be executed with
-                                        # Rscript temperature-anomalies.r
+# Rscript download-saxony-monthly-temperature.r <csv file>
+args<-commandArgs(TRUE)
+
+if(length(args) < 1){
+  message("Usage: download-saxony-monthly-temperature.r <csv file>")
+  stop("no csv file provided")
+}
+
+
 library(rdwd)
 
 library(readr)
 library(ggplot2)
 library(dplyr)
 
-stations = read_csv("stations-saxony.csv",
-                    col_names=c('station_id','date_start','date_end','geo_lon','geo_lat','height','name','state'))
+source("rdwd_tools.r")
 
-download_station = function(sid){
+available_stations = read_csv(
+  args[1],
+  col_names=c('station_id','date_start','date_end','geo_lon','geo_lat','height','name','state')) %>%
+  mutate(station_id = as.integer(station_id))
 
-    sid_mask = stations$station_id %in% sid
-    
-    station_info = stations[sid_mask,]
+dflist = lapply(available_stations$station_id,
+                download_station,
+                stations=available_stations)
 
-    station_link = selectDWD(id=sid, res='monthly', var='kl', per='historical')
-    
-    station_data = tryCatch({dataDWD(station_link, progbar=T,read=T)},
-                            warning = function(w){ cat(paste('something fishy with',sid,stations$name[sid_mask])); },
-                            error = function(e){ print(paste('unable to download',sid,stations$name[sid_mask]));return(NA) },
-                            finally = { cat(sid) })
+cat('merging downloaded datasets',glimpse(dflist[[1]]))
 
-    if(is.null(station_data) || is.na(station_data) == T){
-        cat('failed')
-        return(station_data)
-    }
-
-    
-    rdf = station_data %>%
-        select(STATIONS_ID,MESS_DATUM_BEGINN,MESS_DATUM_ENDE,QN_4,MO_TT,MO_TX,MO_TN) %>%
-        left_join(station_info, by = c("STATIONS_ID"="station_id"))
-    
-    cat(" obtained","\t",stations$geo_lon[sid_mask],stations$geo_lat[sid_mask],stations$name[sid_mask],'\n')
-    
-    return(rdf)
-}
-
-
-dflist = sapply(stations$station_id,download_station)
 df = bind_rows(dflist)
+
 
 write_csv(df,'saxony-monthly-temperature.csv')
