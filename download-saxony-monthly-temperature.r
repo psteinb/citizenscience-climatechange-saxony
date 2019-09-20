@@ -25,9 +25,10 @@ dflist = lapply(available_stations$station_id,
                 download_station,
                 stations=available_stations)
 
-cat('merging downloaded datasets',glimpse(dflist[[1]]))
+message('merging downloaded datasets')
 
 df = bind_rows(dflist)
 
-
-write_csv(df,'saxony-monthly-temperature.csv')
+ofile = 'saxony-monthly-temperature.csv'
+write_csv(df,ofile)
+message('data written to',ofile)
