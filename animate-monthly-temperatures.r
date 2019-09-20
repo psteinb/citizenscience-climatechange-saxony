@@ -51,59 +51,74 @@ temps_station = temps %>%
     summarize( anom_total     = round(sum(anom),0),
               max_anom_total = round(sum(max_anom),0),
               min_anom_total = round(sum(min_anom),0),
-               anom_median    = round(median(anom),0),
+              anom_median_rounded    = round(median(anom),0),
+              anom_median    = median(anom),
               max_anom_median= round(median(max_anom),0),
               min_anom_median= round(median(min_anom),0)
               ) %>%
     left_join(stations, by=c('STATIONS_ID' = 'STATIONS_ID'))
-    
+
+
+
 nyears = length(unique(temps_station$yr))
 sac <- sf::st_read("shapes/vg2500_bld.shp", quiet = TRUE)  %>% filter(GEN %in% "Sachsen")
 
 # https://github.com/thomasp85/gganimate
 anplot = ggplot(sac) +
   geom_sf() +
-  geom_point(data=temps_station,aes(x=geo_lon,y=geo_lat,color=anom_median),
-             size=20) +
-    ## geom_jitter() +
+  geom_point(data=temps_station,aes(x=geo_lon,
+                                    y=geo_lat,
+                                    color=anom_median_rounded,
+                                    size=abs(anom_median)*50)) +
     theme_minimal() +
     scale_color_gradient2(midpoint=0, low="blue", mid="white",
                            high="red", space ="Lab" ) +
-                                        #scale_color_gradientn(colors=rev(rainbow(5))) +
-    
     xlab("Monat") +
     ylab("Durchschnitstemperatur") +
-    labs(title = 'Jahr: {frame_time}, mittlere Temperaturanomalie des Monatsmittel im Vergleich zu 1950-1981', x = 'Laenge', y = 'Breite') +
-    transition_time(yr) +
-    ease_aes('linear') 
+  labs(title = 'Jahr: {frame_time}, Anomalie der Monatsmitteltemperatur im Jahr (Referenz 1950-1981)',
+       caption = 'Datenquelle: DWD, Code: https://github.com/psteinb/citizenscience-climatechange-saxony',
+       x = 'Länge',
+       y = 'Breite') +
+  guides(size = "none", color= guide_legend(title = "Anomaliewert")) +
+  transition_time(yr) +
+  ease_aes('cubic-in-out')
 
 anim = animate(anplot,
-               nframes=nyears,
+               nframes=3*nyears,
                duration=20,
                renderer = gifski_renderer(),
-               width=700,height=500)
+               width=700,
+               height=500,
+               end_pause=20)
+
+
 
 anim_save("monthly-temperatures.gif",anim)
 
-anplot = ggplot(temps_station,aes(x=geo_lon,y=geo_lat,color=max_anom_median)) +
-    geom_point(size=20) +
-    geom_jitter() +
+anplot = ggplot(sac) +
+  geom_sf() +
+  geom_point(data=temps_station,aes(x=geo_lon,
+                                    y=geo_lat,
+                                    color=min_anom_median,
+                                    size=abs(min_anom_median)*30)) +
     theme_minimal() +
-                                        #scale_color_gradientn(colors=rev(rainbow(5))) +
     scale_color_gradient2(midpoint=0, low="blue", mid="white",
                            high="red", space ="Lab" ) +
-    
     xlab("Monat") +
-    ylab("Maximaltemperatur") +
-    labs(title = 'Jahr: {frame_time}, mittlere Temperaturanomalie des Monatsmax im Vergleich zu 1950-1981', x = 'Laenge', y = 'Breite') +
-    
+    ylab("Durchschnitstemperatur") +
+    labs(title = 'Jahr: {frame_time}, Anomalie der Monatsmindesttemperatur im Jahr (Referenz 1950-1981)',
+         caption = 'Datenquelle: DWD, Code: https://github.com/psteinb/citizenscience-climatechange-saxony',
+         x = 'Länge', y = 'Breite') +
+  guides(size = "none", color= guide_legend(title = "Anomaliewert")) +
     transition_time(yr) +
-    ease_aes('linear') 
+  ease_aes('cubic-in-out')
 
 anim = animate(anplot,
                nframes=nyears,
                duration=20,
                renderer = gifski_renderer(),
-               width=700,height=500)
+               width=700,
+               height=500,
+               end_pause=20)
 #magick::image_write(anim, path="monthly-temperatures.gif")
-anim_save("monthly-max-temperatures.gif",anim)
+anim_save("monthly-min-temperatures.gif",anim)
